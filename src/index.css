@@ -15,3 +15,123 @@
     @apply bg-gray-50 text-gray-900;
   }
 }
+
+@media print {
+  /* Hide all UI elements */
+  .no-print, header, aside, .w-64, .h-20, button, .bg-dental-900 {
+    display: none !important;
+  }
+
+  /* Reset main container for full-width print */
+  body, html {
+    background-color: white !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+
+  .flex-1, main, .overflow-y-auto, #root {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    width: 100% !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  /* Professional Header for Report */
+  .max-w-7xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Transform Cards into a clean summary table */
+  .grid-cols-4 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+    border: 1px solid #eee !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  .grid-cols-4 > div {
+    flex: 1 !important;
+    border: 1px solid #eee !important;
+    padding: 1rem !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Tables optimization */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 1rem !important;
+    page-break-before: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border-bottom: 1px solid #eee !important;
+    padding: 10px !important;
+  }
+
+  /* Remove all shadows and rounded corners for clean paper look */
+  * {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  h1 { font-size: 24pt !important; margin-bottom: 10pt !important; }
+  h3 { font-size: 14pt !important; margin-top: 20pt !important; border-bottom: 2px solid #eee !important; }
+
+  /* Force hide invoice header/actions */
+  #print-actions, .no-print, .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Invoice specific print adjustments */
+  .max-w-4xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .bg-gray-100 { background-color: white !important; }
+  .p-12 { padding: 0 !important; }
+  .text-gray-800, .text-gray-500, .text-gray-400 { color: black !important; }
+  .border-gray-200, .border-gray-100 { border-color: #eee !important; }
+  
+  /* Fix blank page and fit to one page */
+  .min-h-\[1000px\] {
+    min-height: 0 !important;
+  }
+  .mt-32 {
+    margin-top: 2rem !important;
+  }
+
+  /* Invoice Totals Section - Robust alignment */
+  .justify-end {
+    display: flex !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+    margin-top: 2rem !important;
+    clear: both !important;
+  }
+
+  .w-64 {
+    width: 18rem !important;
+    float: right !important;
+  }
+}

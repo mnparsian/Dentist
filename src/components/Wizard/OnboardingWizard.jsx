@@ -10,6 +10,7 @@ const steps = [
 export default function OnboardingWizard({ onComplete, onCancel }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
+    caseNumber: `${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     firstName: '',
     lastName: '',
     dob: '',
@@ -84,6 +85,12 @@ export default function OnboardingWizard({ onComplete, onCancel }) {
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Informazioni di Base</h3>
               <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-black text-dental-600 uppercase tracking-widest mb-1.5">N. Cartella (ID Unico)</label>
+                  <input type="text" name="caseNumber" value={formData.caseNumber} onChange={handleChange}
+                    className="w-full px-4 py-2.5 border-2 border-dental-100 rounded-xl focus:ring-4 focus:ring-dental-50 outline-none transition-all bg-dental-50/30 focus:bg-white font-bold text-dental-700" 
+                    placeholder="es. 2024-001" />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
                   <input type="text" name="firstName" value={formData.firstName} onChange={handleChange}

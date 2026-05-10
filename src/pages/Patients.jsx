@@ -5,7 +5,21 @@ import { useNavigate } from 'react-router-dom';
 export default function Patients() {
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Tutti gli stati');
   const navigate = useNavigate();
+
+  const handleDelete = async (e, id, name) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(`Sei sicuro di voler eliminare il paziente "${name}"? Questa azione è irreversibile.`);
+    if (confirmed) {
+      if (window.api && window.api.deletePatient) {
+        await window.api.deletePatient(id);
+        const data = await window.api.getPatients();
+        setPatients(data);
+      }
+    }
+  };
 
   useEffect(() => {
     // Check if the API is available (Electron context)
@@ -30,6 +44,17 @@ export default function Patients() {
     }
   }, []);
 
+  const filteredPatients = patients.filter(p => {
+    const matchesSearch = 
+      p.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.phone?.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'Tutti gli stati' || p.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
@@ -46,15 +71,21 @@ export default function Patients() {
           <input 
             type="text" 
             placeholder="Cerca per nome o telefono..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-500 transition-all text-sm"
           />
         </div>
         <div className="flex gap-2">
-          <select className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-dental-500">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-dental-500"
+          >
             <option>Tutti gli stati</option>
-            <option>Attivo</option>
-            <option>In Trattamento</option>
-            <option>Richiamo</option>
+            <option value="Attivo">Attivo</option>
+            <option value="In Trattamento">In Trattamento</option>
+            <option value="Richiamo">Richiamo</option>
           </select>
         </div>
       </div>
@@ -78,7 +109,7 @@ export default function Patients() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {patients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <tr 
                   key={patient.id} 
                   onClick={() => navigate(`/patients/${patient.id}`)}
@@ -121,7 +152,10 @@ export default function Patients() {
                       <button className="p-2 text-gray-400 hover:text-dental-600 hover:bg-dental-50 rounded-lg transition-colors">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button 
+                        onClick={(e) => handleDelete(e, patient.id, `${patient.firstName} ${patient.lastName}`)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Activity, Users, CreditCard, Settings, Menu, Bell } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Activity, Users, CreditCard, Settings, Menu, Bell, Printer } from 'lucide-react';
 import OnboardingWizard from './components/Wizard/OnboardingWizard';
 import HybridOdontogram from './components/Odontogram/HybridOdontogram';
 import Patients from './pages/Patients';
 import PatientDetail from './pages/PatientDetail';
+import Finance from './pages/Finance';
+import Reports from './pages/Reports';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -12,6 +14,7 @@ const Sidebar = () => {
     { path: '/', name: 'Dashboard', icon: Activity },
     { path: '/patients', name: 'Pazienti', icon: Users },
     { path: '/finance', name: 'Contabilità', icon: CreditCard },
+    { path: '/reports', name: 'Stampe', icon: Printer },
     { path: '/settings', name: 'Impostazioni', icon: Settings },
   ];
 
@@ -54,32 +57,81 @@ const Sidebar = () => {
   );
 };
 
-const Topbar = ({ onNewPatient }) => (
-  <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shadow-sm z-10 relative">
-    <div className="flex items-center gap-4">
-      <button className="text-gray-400 hover:text-gray-600 lg:hidden"><Menu /></button>
-      <div className="relative">
-        <input 
-          type="text" 
-          placeholder="Cerca paziente (nome, telefono...)" 
-          className="w-96 pl-4 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-500 focus:bg-white transition-all text-sm"
-        />
+const Topbar = ({ onNewPatient }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const navigate = useNavigate();
+
+  const handleSearch = async (val) => {
+    setQuery(val);
+    if (val.length < 2) {
+      setResults([]);
+      return;
+    }
+
+    if (window.api && window.api.getPatients) {
+      const all = await window.api.getPatients();
+      const filtered = all.filter(p => 
+        p.firstName.toLowerCase().includes(val.toLowerCase()) || 
+        p.lastName.toLowerCase().includes(val.toLowerCase()) ||
+        p.phone.includes(val)
+      ).slice(0, 5); // Limit to 5 results
+      setResults(filtered);
+    }
+  };
+
+  return (
+    <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shadow-sm z-50 relative">
+      <div className="flex items-center gap-4">
+        <button className="text-gray-400 hover:text-gray-600 lg:hidden"><Menu /></button>
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder="Cerca paziente (nome, telefono...)" 
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-96 pl-4 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-500 focus:bg-white transition-all text-sm"
+          />
+          {results.length > 0 && (
+            <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+              {results.map(p => (
+                <button 
+                  key={p.id}
+                  onClick={() => {
+                    navigate(`/patients/${p.id}`);
+                    setQuery('');
+                    setResults([]);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-dental-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <div className="w-8 h-8 bg-dental-100 text-dental-600 rounded-full flex items-center justify-center text-[10px] font-bold">
+                    {p.firstName[0]}{p.lastName[0]}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-800">{p.firstName} {p.lastName}</div>
+                    <div className="text-[10px] text-gray-400">{p.phone}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-6">
-      <button className="relative text-gray-400 hover:text-dental-500 transition-colors">
-        <Bell className="w-6 h-6" />
-        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-      </button>
-      <button 
-        onClick={onNewPatient}
-        className="bg-dental-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-dental-700 shadow-md hover:shadow-lg transition-all"
-      >
-        + Nuovo Paziente
-      </button>
-    </div>
-  </header>
-);
+      <div className="flex items-center gap-6">
+        <button className="relative text-gray-400 hover:text-dental-500 transition-colors">
+          <Bell className="w-6 h-6" />
+          <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+        <button 
+          onClick={onNewPatient}
+          className="bg-dental-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-dental-700 shadow-md hover:shadow-lg transition-all"
+        >
+          + Nuovo Paziente
+        </button>
+      </div>
+    </header>
+  );
+};
 
 const Dashboard = () => (
   <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -119,10 +171,14 @@ export default function App() {
   return (
     <Router>
       <div className="flex w-screen h-screen bg-gray-50 font-sans overflow-hidden">
-        <Sidebar />
+        <div className="no-print">
+          <Sidebar />
+        </div>
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Topbar onNewPatient={() => setShowWizard(true)} />
+          <div className="no-print">
+            <Topbar onNewPatient={() => setShowWizard(true)} />
+          </div>
 
           
           <main className="flex-1 flex overflow-hidden bg-gray-50/50">
@@ -131,7 +187,8 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/patients" element={<Patients />} />
                 <Route path="/patients/:id" element={<PatientDetail />} />
-                <Route path="/finance" element={<div className="p-8">Contabilità Page</div>} />
+                <Route path="/finance" element={<Finance />} />
+                <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<div className="p-8">Impostazioni Page</div>} />
               </Routes>
             </div>
@@ -140,9 +197,24 @@ export default function App() {
 
         {showWizard && (
           <OnboardingWizard 
-            onComplete={(data) => {
-              console.log('Patient Saved:', data);
+            onComplete={async (data) => {
+              const newPatient = {
+                ...data,
+                id: Date.now().toString(), // Database primary key
+                status: 'Attivo',
+                lastVisit: 'Nessuna',
+                odontogram: {},
+                treatments: [],
+                quotes: [],
+                payments: [],
+                visits: [],
+                documents: []
+              };
+              
+              await window.api.updatePatient(newPatient);
               setShowWizard(false);
+              // Force refresh or redirect if needed
+              window.location.reload(); 
             }} 
             onCancel={() => setShowWizard(false)} 
           />
